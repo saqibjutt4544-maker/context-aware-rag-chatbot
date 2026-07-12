@@ -1,0 +1,19 @@
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Streamlit secrets (never commit API keys)
+.streamlit/secrets.toml
+
+# Vector store (large, regenerable via ingest.py)
+# Remove this line if you want to commit it for Streamlit Cloud deployment
+vectorstore/
+
+# OS files
+.DS_Store
+Thumbs.db
