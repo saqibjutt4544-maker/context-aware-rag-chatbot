@@ -1,0 +1,13 @@
+# Pinned to versions tested together. langchain 1.x removed the classic
+# ConversationalRetrievalChain/ConversationBufferMemory APIs this project
+# uses, so we stay on the 0.3.x line deliberately.
+langchain==0.3.25
+langchain-community==0.3.25
+langchain-core==0.3.86
+langchain-text-splitters==0.3.8
+langchain-groq==0.2.5
+langchain-huggingface==0.1.2
+faiss-cpu>=1.8.0
+sentence-transformers>=3.0.0
+wikipedia>=1.4.0
+streamlit>=1.38.0
