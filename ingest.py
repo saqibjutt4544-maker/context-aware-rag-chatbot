@@ -27,6 +27,7 @@ from langchain_community.vectorstores import FAISS
 # You can swap this whole section out for your own PDFs/text files later
 # (see the "Using your own documents instead" note at the bottom).
 TOPICS = [
+    # Core ML/DL concepts
     "Machine learning",
     "Deep learning",
     "Natural language processing",
@@ -35,6 +36,18 @@ TOPICS = [
     "Convolutional neural network",
     "Reinforcement learning",
     "Large language model",
+
+    # Machine learning algorithms
+    "Linear regression",
+    "Logistic regression",
+    "Decision tree learning",
+    "Random forest",
+    "Support vector machine",
+    "K-nearest neighbors algorithm",
+    "Naive Bayes classifier",
+    "K-means clustering",
+    "Gradient boosting",
+    "Gradient descent",
 ]
 
 VECTORSTORE_DIR = "vectorstore"
