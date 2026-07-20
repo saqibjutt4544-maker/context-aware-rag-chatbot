@@ -1,136 +1,165 @@
+---
+title: Context-Aware RAG Chatbot
+emoji: 💬
+colorFrom: blue
+colorTo: purple
+sdk: streamlit
+tags:
+  - langchain
+  - rag
+  - chatbot
+  - streamlit
+  - faiss
+  - groq
+  - llm
+  - nlp
+pinned: false
+short_description: Conversational chatbot with context memory and RAG-based retrieval from a vectorized Wikipedia knowledge base
+license: mit
+---
 
-# Context-Aware Chatbot Using LangChain + RAG
+# 💬 Context-Aware RAG Chatbot
 
-A conversational chatbot that retrieves answers from a vectorized knowledge base
-(Wikipedia articles on AI/ML topics) and remembers the conversation as it goes,
-built with LangChain, FAISS, Groq (Llama 3.3 70B), and Streamlit.
+A conversational chatbot that **remembers your conversation** and **retrieves real facts** from a knowledge base — instead of guessing.
 
-## How it works
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![LangChain](https://img.shields.io/badge/LangChain-RAG-green)
+![FAISS](https://img.shields.io/badge/FAISS-Vector%20Search-orange)
+![Groq](https://img.shields.io/badge/Groq-Llama%203.3%2070B-red)
+![Streamlit](https://img.shields.io/badge/Streamlit-App-ff4b4b)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-1. **Ingestion** (`ingest.py`, run once): downloads a set of Wikipedia articles,
-   splits them into overlapping chunks, embeds each chunk into a vector using a
-   free local HuggingFace model, and saves the vectors into a FAISS index.
-2. **Chat** (`app.py`): when you ask a question, it gets embedded and matched
-   against the FAISS index to retrieve the most relevant chunks. Those chunks,
-   plus the running conversation history, are sent to the LLM (Groq/Llama 3.3)
-   to generate a grounded answer.
-3. **Memory**: `ConversationBufferMemory` keeps track of previous turns, so
-   follow-up questions like "what about its limitations?" resolve correctly
-   without you having to repeat context.
+## 📌 Overview
 
-## Project structure
+A Retrieval-Augmented Generation (RAG) chatbot that combines a vectorized knowledge base
+with persistent conversation memory. Documents (Wikipedia articles on ML/AI concepts and
+algorithms) are chunked and embedded into a **FAISS** vector store. Each user question is
+matched against that store to retrieve the most relevant passages, which are combined with
+the ongoing chat history and sent to **Llama 3.3 70B** (via the free Groq API) to generate
+a grounded answer — all orchestrated with **LangChain** and served through a **Streamlit** UI.
 
+**Core idea:** an LLM answering from retrieved, real documents is far more trustworthy than
+one answering purely from memory — if the answer isn't in the knowledge base, the bot says
+so instead of hallucinating.
+
+## ✨ Features
+
+- 🧠 **Conversational Memory** — follow-up questions like "what about its limitations?" resolve correctly using chat history
+- 📚 **Vectorized Knowledge Base** — Wikipedia articles on ML/AI concepts and algorithms, chunked and embedded with `sentence-transformers`
+- 🔍 **Semantic Retrieval** — FAISS similarity search pulls the most relevant chunks for every query
+- 🚫 **Grounded Answers** — the bot says "I don't know" when the knowledge base doesn't cover a topic, instead of making things up
+- 📎 **Source Transparency** — every answer shows an expandable panel with the exact passages used to generate it
+- ⚡ **Fast Inference** — Llama 3.3 70B served through Groq's LPU hardware, free tier, no credit card required
+- 🔌 **Swappable Corpus** — easily point the ingestion script at your own PDFs or text files instead of Wikipedia
+
+## 🖥️ Running Locally
+
+**1. Clone the repository**
+```bash
+git clone https://github.com/saqibjutt4544-maker/context-aware-rag-chatbot.git
+cd context-aware-rag-chatbot
 ```
-rag-chatbot/
-├── ingest.py           # Builds the vector store (run once)
-├── app.py               # Streamlit chatbot app
-├── requirements.txt
-├── vectorstore/          # Created by ingest.py (FAISS index)
-└── README.md
+
+**2. Create and activate a virtual environment**
+```bash
+python -m venv venv
+venv\Scripts\activate      # Windows
+source venv/bin/activate   # Mac/Linux
 ```
 
-## Setup
-
-### 1. Install dependencies
-
+**3. Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-If you're on Windows and hit wheel-build errors on `faiss-cpu` or
-`sentence-transformers` (common on Python 3.13), the fix is the same one that
-worked for the BERT classifier project: use Python 3.10–3.12 instead, or run
-this on Google Colab where all wheels are prebuilt.
+**4. Get a free Groq API key**
+Sign up at [console.groq.com](https://console.groq.com) → create an API key. No credit card required.
 
-### 2. Get a free Groq API key
-
-Go to [console.groq.com](https://console.groq.com) → sign up → create an API
-key. No credit card required. Llama 3.3 70B is available on the free tier.
-
-### 3. Build the knowledge base
-
+**5. Build the knowledge base**
 ```bash
 python ingest.py
 ```
+Downloads the Wikipedia articles listed in `TOPICS`, chunks them, embeds them, and saves
+a FAISS index to `vectorstore/`. Run this once — re-run it any time you edit `TOPICS`.
 
-This downloads the Wikipedia articles listed in `TOPICS` (edit that list to
-change the corpus), chunks them, embeds them, and saves the result to
-`./vectorstore/`. You only need to run this once — re-run it if you change the
-topics or add your own documents.
-
-**Why this step needs internet access**: it calls the live Wikipedia API. If
-you're running this in a sandboxed/offline environment, it will fail — that's
-expected there, not a bug. It works normally on your own machine or in Colab.
-
-### 4. Run the chatbot
-
+**6. Run the chatbot**
 ```bash
 streamlit run app.py
 ```
-
 Paste your Groq API key into the sidebar and start chatting.
 
-## Using your own documents instead of Wikipedia
+## 🔍 How It Works
 
-Open `ingest.py` and replace the `load_documents()` function. For a folder of
-text files:
-
-```python
-from langchain_community.document_loaders import DirectoryLoader, TextLoader
-loader = DirectoryLoader("data/", glob="*.txt", loader_cls=TextLoader)
-documents = loader.load()
+```
+Documents (Wikipedia)                     User Question
+        │                                       │
+        ▼                                       ▼
+  Chunk + Embed (MiniLM)                  Embed Query
+        │                                       │
+        ▼                                       ▼
+  FAISS Vector Store  ─────────────────►  Similarity Search
+                                                 │
+                                                 ▼
+                                        Retrieved Context
+                                                 │
+                              Chat Memory ──────►│
+                                                 ▼
+                                        LangChain Chain
+                                                 │
+                                                 ▼
+                                   LLM (Groq / Llama 3.3 70B)
+                                                 │
+                                                 ▼
+                                         Grounded Answer
 ```
 
-For PDFs:
+## 🗂️ Project Structure
 
-```python
-from langchain_community.document_loaders import PyPDFLoader
-loader = PyPDFLoader("my_document.pdf")
-documents = loader.load()
+```
+📦 context-aware-rag-chatbot
+┣ 🐍 ingest.py              ← builds the FAISS vector store from Wikipedia
+┣ 🐍 app.py                 ← Streamlit chatbot UI with retrieval + memory
+┣ 📁 vectorstore/           ← FAISS index (created by ingest.py)
+┣ 📄 requirements.txt
+┣ 📄 .gitignore
+┣ 📄 LICENSE
+┗ 📄 README.md
 ```
 
-Everything downstream (chunking, embedding, saving) stays the same.
+## 🛠️ Tech Stack
 
-## Why things are pinned the way they are
+| Tool | Purpose |
+|---|---|
+| Python 3.10+ | Core language |
+| LangChain | RAG orchestration, conversational chain, memory |
+| FAISS | Local vector similarity search |
+| sentence-transformers (MiniLM) | Free local document embeddings |
+| Groq API (Llama 3.3 70B) | LLM inference, free tier, no credit card |
+| Streamlit | Chat UI and deployment |
 
-`requirements.txt` pins `langchain==0.3.25` deliberately. LangChain 1.x
-(released later) removed the classic `ConversationalRetrievalChain` and
-`ConversationBufferMemory` classes this project uses, in favor of a new
-runnable/LangGraph-based memory system. The 0.3.x line is simpler for a
-course project and is still what most tutorials and documentation you'll
-find are written against — but it's worth knowing this project intentionally
-avoids the newest LangChain if you go looking for docs later.
+## 🗺️ Roadmap
 
-## Deploying
+- [x] Build vectorized knowledge base from Wikipedia
+- [x] Implement retrieval-augmented question answering
+- [x] Add conversational memory across turns
+- [x] Expand knowledge base with core ML algorithms
+- [x] Display retrieved sources per answer
+- [ ] Support user-uploaded PDFs from the Streamlit sidebar
+- [ ] Add ConversationSummaryMemory for longer chat sessions
+- [ ] Deploy to Streamlit Community Cloud
 
-Push this repo to GitHub, then deploy for free on
-[Streamlit Community Cloud](https://streamlit.io/cloud):
-1. Connect your GitHub repo
-2. Set the main file to `app.py`
-3. Add your `GROQ_API_KEY` under **Settings → Secrets** as:
-   ```
-   GROQ_API_KEY = "your-key-here"
-   ```
-4. You'll also need to run `ingest.py` once and commit the resulting
-   `vectorstore/` folder to the repo (or add a build step that runs it),
-   since Streamlit Cloud won't run `ingest.py` for you automatically.
+## ⚠️ Notes
 
-## Troubleshooting
+- `langchain==0.3.25` is pinned deliberately — LangChain 1.x removed the classic
+  `ConversationalRetrievalChain`/`ConversationBufferMemory` APIs this project uses.
+- `ingest.py` needs internet access to fetch Wikipedia articles; this is expected
+  and only needs to run once (or whenever `TOPICS` changes).
 
-| Problem | Why it happens | Fix |
-|---|---|---|
-| `No vector store found` | You ran `app.py` before `ingest.py` | Run `python ingest.py` first |
-| `403`/connection error during `ingest.py` | No internet access, or Wikipedia rate-limited you | Retry, or reduce the `TOPICS` list |
-| Slow first run of `app.py` | The embedding model (~90MB) downloads and caches on first use | Only happens once; subsequent runs are fast |
-| `ImportError` on `ConversationBufferMemory` | You have LangChain 1.x installed instead of 0.3.x | `pip install -r requirements.txt` again to re-pin versions |
-| Wheel build errors on Windows | Some packages (faiss, sentence-transformers) lack prebuilt wheels for very new Python versions | Use Python 3.10–3.12, or develop on Colab |
+## 👤 Author
 
-## Skills demonstrated
+**Muhammad Saqib Latif** — [@saqibjutt4544-maker](https://github.com/saqibjutt4544-maker)
+Open to internship/entry-level ML and AI opportunities.
 
-- Conversational AI development (LangChain conversational chain + memory)
-- Document embedding and vector search (FAISS + sentence-transformers)
-- Retrieval-Augmented Generation (RAG)
-- LLM integration and deployment (Groq API + Streamlit)
+## 📄 License
 
-# context-aware-rag-chatbot
-Context-aware RAG chatbot built with LangChain, FAISS, and Groq (Llama 3.3), deployed with Streamlit. Retrieves answers from a vectorized Wikipedia knowledge base and remembers conversation history.
+This project is licensed under the MIT License — free to use, modify, and build on it.
